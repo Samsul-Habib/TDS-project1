@@ -74,4 +74,66 @@ This project demonstrates the future of autonomous development — where **LLMs 
 ```bash
 git clone https://github.com/Samsul-Habib/TDS-project1
 cd llm-code-deployment-system
+```
 
+### 2️⃣ Create and Activate a Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate   # (Windows: venv\Scripts\activate)
+```
+
+### 3️⃣ Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ Run the fastAPI server
+```bash
+uvicorn main:app --reload
+```
+
+### 🧠 Example Usage
+✅ Build a New App
+```bash
+curl -X POST "http://127.0.0.1:8000/api-endpoint" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "student@example.com",
+  "secret": "my-secret",
+  "task": "daily-compliment-app",
+  "round": 1,
+  "nonce": "compliment-app-001",
+  "brief": "Build a minimal web app called Daily Compliment that displays a random compliment each time the user clicks a button. Keep the design simple, responsive, and professional.",
+  "evaluation_url": "https://eval.example.com/notify"
+}'
+```
+### The system will:
+* Validate your secret
+* Generate app code using the LLM
+* Create a GitHub repository
+* Push files and enable GitHub Pages
+* Notify your evaluation server with all metadata
+
+🔁 Update an Existing App
+```bash
+curl -X POST "http://127.0.0.1:8000/api-endpoint" \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "student@example.com",
+  "secret": "my-secret",
+  "task": "daily-compliment-app",
+  "round": 2,
+  "nonce": "compliment-app-001",
+  "brief": "Add a greeting message and current date above the compliment. Keep the same design and update README.md accordingly.",
+  "evaluation_url": "https://eval.example.com/notify"
+}'
+```
+### The system:
+* Detects the existing nonce
+* Fetches the repo’s current code
+* Generates incremental updates only
+* Commits changes and redeploys automatically
+
+### 🧾 License
+
+This project is licensed under the MIT License.
