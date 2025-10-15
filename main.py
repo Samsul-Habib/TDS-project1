@@ -6,6 +6,7 @@ import requests, pathlib,httpx
 from dotenv import load_dotenv
 from github import Github
 from pathlib import Path
+from github.GithubException import GithubException
 
 # Load secret from .env file
 load_dotenv()
@@ -134,8 +135,17 @@ async def receive_task(request: Request):
             
             
             # pushing the code in github
-            repo_url, pages_url,commit_sha = push_to_github(task, brief, generated_files,nonce)
 
+            result=push_to_github(task, brief, generated_files,nonce)
+
+            # Handle name conflict gracefully
+            if isinstance(result,dict) and result.get("error")=="name_conflict":
+                return JSONResponse(
+                    {"error": result['message']},
+                    status_code=409
+                )
+            
+            repo_url, pages_url,commit_sha=result
             
             # notify the evaluation server about the deployment
             if evaluation_url:
@@ -359,6 +369,18 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
         print("✅ Repo successfully created and tracked.")
         return repo_url, pages_url, commit_sha
+    
+    except GithubException as e:
+        if e.status == 422 and "name already exists" in str(e):
+            # Safety fallback for duplicate repo creation
+            print("❌ Repo creation failed: name already exists.")
+            return {
+                "error": "name_conflict",
+                "message": "Name the task something different — this repo already exists."
+            }
+        else:
+            print(f"❌ GitHub operation failed: {e}")
+            raise
 
     except Exception as e:
         print(f"❌ Error in push_to_github: {e}")
