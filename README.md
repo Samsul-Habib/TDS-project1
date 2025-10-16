@@ -73,7 +73,7 @@ This project demonstrates the future of autonomous development — where **LLMs 
 ### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/Samsul-Habib/TDS-project1
-cd llm-code-deployment-system
+cd TDS-project1
 ```
 
 ### 2️⃣ Create and Activate a Virtual Environment
