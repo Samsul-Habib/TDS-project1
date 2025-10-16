@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 import json,re
 import os, time
 import requests, pathlib,httpx
@@ -19,6 +19,13 @@ GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
 NONCE_TRACKER_FILE = Path("nonce_tracker.json")
 
 app = FastAPI()
+
+with open("index.html", "r", encoding="utf-8") as f:
+    HOME_HTML = f.read()
+
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    return HOME_HTML
 
 
 @app.post("/api-endpoint")
@@ -69,6 +76,35 @@ async def receive_task(request: Request):
         if not existing_repo_url:
             print(f"🆕 New nonce detected: creating repo for task {task}")
         
+            checks_section=""
+            if data.get("checks"):
+                checks_section=f"""
+                ### EVALUATION CHECKS ###
+                The following checks describe how your generated application will be automatically evaluated.
+                You MUST implement all features, behaviors, and conditions implied by these checks.
+                Do not rewrite or repeat these checks in the output.
+                Use them only to guide your implementation and ensure the final app passes them successfully.
+                {chr(10).join([f"- {check}" for check in data['checks']])}
+                """
+            
+            attach=""
+            if attachments:
+                attachment_details="\n".join(
+                    [f"- {att['name']}: {att['url']}" for att in attachments]
+                )
+                attach=f"""
+                ### ATTACHMENTS ###
+                The following sample files are provided as reference inputs for your task.
+
+                {attachment_details}
+
+                - Each attachment URL is base64-encoded or embedded data. 
+                - Use these attachments only when the task brief does NOT provide a direct input (e.g., a ?url parameter). 
+                - If the task brief mentions its own file or input, prefer that instead.
+                - Do NOT reproduce the attachment content in your output — just reference it logically in your generated code.
+                - If the app requires an image or data source, default to these attachments where applicable.
+                """
+
             prompt = f"""
             You are an expert full-stack web developer with years of experience building clean, production-grade applications.
 
@@ -82,6 +118,8 @@ async def receive_task(request: Request):
 
             ### TASK ###
             {brief}
+            {attach}
+            {checks_section}
 
             ### README REQUIREMENTS ###
             The `README.md` file must:
@@ -188,6 +226,35 @@ async def receive_task(request: Request):
             print(f"🔁 Existing nonce found. Updating repo: {existing_repo_url}")
             existing_files = get_existing_code_from_repo(existing_repo_url)
 
+            checks_section=""
+            if data.get("checks"):
+                checks_section=f"""
+                ### EVALUATION CHECKS ###
+                The following checks describe how your generated application will be automatically evaluated.
+                You MUST implement all features, behaviors, and conditions implied by these checks.
+                Do not rewrite or repeat these checks in the output.
+                Use them only to guide your implementation and ensure the final app passes them successfully.
+                {chr(10).join([f"- {check}" for check in data['checks']])}
+                """
+            
+            attach=""
+            if attachments:
+                attachment_details="\n".join(
+                    [f"- {att['name']}: {att['url']}" for att in attachments]
+                )
+                attach=f"""
+                ### ATTACHMENTS ###
+                The following sample files are provided as reference inputs for your task.
+
+                {attachment_details}
+
+                - Each attachment URL is base64-encoded or embedded data. 
+                - Use these attachments only when the task brief does NOT provide a direct input (e.g., a ?url parameter). 
+                - If the task brief mentions its own file or input, prefer that instead.
+                - Do NOT reproduce the attachment content in your output — just reference it logically in your generated code.
+                - If the app requires an image or data source, default to these attachments where applicable.
+                """
+            
             prompt = f"""
             You are an experienced full-stack web developer responsible for updating an existing production-grade web application.
 
@@ -202,6 +269,8 @@ async def receive_task(request: Request):
 
             ### UPDATE INSTRUCTIONS ###
             {brief}
+            {attach}
+            {checks_section}
 
             ### RULES ###
             - Do NOT create new files unless the update instructions explicitly require it.
