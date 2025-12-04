@@ -152,7 +152,7 @@ async def receive_task(request: Request):
             }
 
             payload = {
-            "model": "gpt-4o-mini",
+            "model": "anthropic/claude-sonnet-4.5",
             "messages": [
                 {
                     "role": "user",
@@ -291,7 +291,7 @@ async def receive_task(request: Request):
             """
 
             payload={
-                "model":"gpt-4o-mini",
+                "model":"anthropic/claude-sonnet-4.5",
                 "messages":[
                     {"role":"system","content":"You are a professional web developer with years of experiences."},
                     {"role":"user","content":prompt}
@@ -564,4 +564,5 @@ def get_existing_code_from_repo(repo_url):
                 existing_files[file.path] = file.decoded_content.decode("utf-8")
 
     fetch_contents()
+
     return existing_files
